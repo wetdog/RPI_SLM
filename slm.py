@@ -11,6 +11,8 @@ from pyfilterbank.octbank import frequencies_fractional_octaves
 import pyaudio
 import time
 from scipy.signal import lfilter
+from sys import argv
+
 
 fs = 44100
 # Construir banco de filtros de tercio y octava
@@ -42,7 +44,11 @@ CHANNELS = 1
 RATE = 44100
 po = 0.000002
 T = 1
-C = -66.8
+
+if len(argv) > 1:
+    C = float(argv[1])
+else:
+    C = -66.8
 
 freq, foo = frequencies_fractional_octaves(-6,4,1000,1)
 
