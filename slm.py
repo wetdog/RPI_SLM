@@ -49,7 +49,8 @@ T = 1
 if len(argv) > 1:
     C = float(argv[1])
 else:
-    C = -61.6
+    # Default constant for panasonic Wm61a without preamp
+    C = -54.2
 
 freq, foo = frequencies_fractional_octaves(-6,4,1000,1)
 
