@@ -19,8 +19,8 @@ Replace with
 
 3. Compile C functions
 
-`gcc -c -std=c99 -O3 sosfilt.c
-gcc -shared -o sosfilt.so sosfilt.o`
+`gcc -c -std=c99 -O3 sosfilt.c`
+`gcc -shared -o sosfilt.so sosfilt.o`
 
 4. Build
 
