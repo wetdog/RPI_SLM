@@ -11,7 +11,10 @@ As we use pyfilterbank library you need first to install it.
 2. If you have numpy => 1.13.3 in your raspberry as being pointed out by @spors you
 need to replace a line in butterworth.py
 
+Erase
 - L2 = L / 2.0
+
+Replace with
 + L2 = L// 2
 
 3. Compile C functions
