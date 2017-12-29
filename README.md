@@ -27,7 +27,7 @@ gcc -shared -o sosfilt.so sosfilt.o`
 
 `python setup.py install`
 
-# Basic Usage
+## Basic Usage
 
 with ` python slm.py` will run with a default calibration constant and a slow weighting.
 
