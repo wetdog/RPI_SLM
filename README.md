@@ -36,4 +36,4 @@ with ` python slm.py` will run with a default calibration constant and a slow we
 
 You can specify a calibration constant and F or S time weighting.
 
-`python slm.py -c <calibration constant> -t <F or S>`
+`python slm.py -c <calibration constant(float)> -t <F or S(str)>`
