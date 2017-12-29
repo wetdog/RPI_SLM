@@ -3,7 +3,7 @@
 
 ### Filtros de Octavas y tercios con pyfilterbank segun IEC 61260
 
-
+import argparse
 import numpy as np
 from pyfilterbank.octbank import FractionalOctaveFilterbank
 from pyfilterbank.splweighting import a_weighting_coeffs_design
@@ -14,8 +14,36 @@ import datetime
 from scipy.signal import lfilter
 from sys import argv
 
+# Argumentos del script
+
+parser = argparse.ArgumentParser(description='Basic SLM with linear weighting, default sampling rate is 44100')
+parser.add_argument("-c", "--constant", help="Calibration constant", type=float)
+parser.add_argument("-t", "--time", help="type -t F for fast or -t S for Slow", type=str)
+args = parser.parse_args()
+
+if  args.constant:
+    C = args.constant
+else:
+    print "Calibration constant set to default -54.2"
+    C = -54.2
+
+if args.time == 'F':
+    T = 0.125
+    frames = 5513
+elif args.time == 'S':
+    T = 1
+    frames = 44100
+else:
+    print "Time weigthing set to Slow"
+    T = 1
+    frames = 44100
+
+
+
+
 
 fs = 44100
+
 # Construir banco de filtros de tercio y octava
 third_oct = FractionalOctaveFilterbank(
     sample_rate=fs,
@@ -40,17 +68,10 @@ octave = FractionalOctaveFilterbank(
 # Filtro tipo A
 b, a = a_weighting_coeffs_design(fs)
 
-# Stream de audio
+# parametros Stream de audio
 CHANNELS = 1
-RATE = 44100
-po = 0.000002
-T = 1
+RATE = fs
 
-if len(argv) > 1:
-    C = float(argv[1])
-else:
-    # Default constant for panasonic Wm61a without preamp
-    C = -54.2
 
 freq, foo = frequencies_fractional_octaves(-6,4,1000,1)
 
@@ -59,22 +80,6 @@ levels = []
 date = datetime.datetime.now()
 filename = str(date.year) + str(date.month) + str(date.day) + '_' + str(date.hour) + str(date.minute) + str(date.second) + '.txt'
 f = open(filename, 'ab')
-
-def callback(in_data, frame_count, time_info, status):
-    audio_data = np.fromstring(in_data, dtype=np.float32)
-    y = lfilter(b, a, audio_data)
-    y_oct, states = octave.filter(y)
-    i = 0
-    for e in y_oct.T:
-        oct_level = db_level(e,T,C)
-        print('{0:.2f} Hz -- {1:.2f} dBA'.format(freq[i],oct_level))
-        i += 1
-    L = db_level(y,T,C)
-    f.write('{0:.2f} \n'.format(L))
-    levels.append(L)
-    print('{0:.2f}  dBA'.format(L))
-    print('Leq {0:.2f} dBA'.format(leq(levels)))
-    return (in_data, pyaudio.paContinue)
 
 def db_level(pa, T, C):
     po = 0.000002
@@ -86,20 +91,38 @@ def leq(levels):
     eq_level = 10*np.log10(e_sum)
     return eq_level
 
+def callback(in_data, frame_count, time_info, status):
+    audio_data = np.fromstring(in_data, dtype=np.float32)
+    y = lfilter(b, a, audio_data)
+    y_oct, states = octave.filter(y)
+    i = 0
+    for e in y_oct.T:
+        oct_level = db_level(e,T,C)
+        print('{0:.2f} Hz -- {1:.2f} dBA'.format(freq[i],oct_level))
+        i += 1
+    La = db_level(y,T,C)
+    L = db_level(audio_data,T,C)
+    f.write('{0:.2f} \n'.format(La))
+    levels.append(La)
+    print('{0:.2f}  dBA'.format(La))
+    print('{0:.2f}  dBZ'.format(L))
+    print('Leq {0:.2f} dBA'.format(leq(levels)))
+    return (in_data, pyaudio.paContinue)
 
 stream = p.open(format=pyaudio.paFloat32,
                 channels=CHANNELS,
                 rate=RATE,
-                frames_per_buffer=44100,
+                frames_per_buffer=frames,
                 input=True,
                 output=False,
                 stream_callback=callback)
 
 stream.start_stream()
 
-print str(stream.get_time)
+record = True
 
-while stream.is_active():
+
+while record:
     time.sleep(0.1)
 
 
