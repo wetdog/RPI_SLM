@@ -38,11 +38,11 @@ else:
     T = 1
     frames = 44100
 
-
-
-
-
+# parametros Stream de audio
+CHANNELS = 1
 fs = 44100
+RATE = fs
+
 
 # Construir banco de filtros de tercio y octava
 third_oct = FractionalOctaveFilterbank(
@@ -67,11 +67,6 @@ octave = FractionalOctaveFilterbank(
 
 # Filtro tipo A
 b, a = a_weighting_coeffs_design(fs)
-
-# parametros Stream de audio
-CHANNELS = 1
-RATE = fs
-
 
 freq, foo = frequencies_fractional_octaves(-6,4,1000,1)
 
