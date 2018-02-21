@@ -9,10 +9,10 @@ from pyfilterbank.octbank import FractionalOctaveFilterbank
 from pyfilterbank.splweighting import a_weighting_coeffs_design
 from pyfilterbank.octbank import frequencies_fractional_octaves
 import pyaudio
-import time
-import datetime
+from datetime import datetime
 from scipy.signal import lfilter
-from sys import argv
+import time
+
 
 # Argumentos del script
 
@@ -68,13 +68,21 @@ octave = FractionalOctaveFilterbank(
 # Filtro tipo A
 b, a = a_weighting_coeffs_design(fs)
 
-freq, foo = frequencies_fractional_octaves(-6,4,1000,1)
+freqs, foo = frequencies_fractional_octaves(-6,4,1000,1)
 
 p = pyaudio.PyAudio()
 levels = []
-date = datetime.datetime.now()
+date = datetime.now()
 filename = str(date.year) + str(date.month) + str(date.day) + '_' + str(date.hour) + str(date.minute) + str(date.second) + '.txt'
 f = open(filename, 'ab')
+# Formato de la tabla en el .txt
+f.write('Time\t\t')
+for freq in freqs:
+    f.write('{0:.0f}Hz\t'.format(freq))
+f.write('LA\t')
+f.write('LZ\t\n')
+f.write((13*8)*'-')
+f.write(2*'\n')
 
 def db_level(pa, T, C):
     po = 0.000002
@@ -91,13 +99,18 @@ def callback(in_data, frame_count, time_info, status):
     y = lfilter(b, a, audio_data)
     y_oct, states = octave.filter(y)
     i = 0
+    oct_level = []
+    f.write('{:%H:%M:%S}\t\t'.format(datetime.now()))
     for e in y_oct.T:
-        oct_level = db_level(e,T,C)
-        print('{0:.2f} Hz -- {1:.2f} dBA'.format(freq[i],oct_level))
+        oct_level.append(db_level(e,T,C))
+        print('{0:.2f} Hz -- {1:.2f} dBA'.format(freqs[i],oct_level[i]))
+        f.write('{0:.2f}\t'.format(oct_level[i]))
         i += 1
     La = db_level(y,T,C)
     L = db_level(audio_data,T,C)
-    f.write('{0:.2f} \n'.format(La))
+    f.write('{0:.2f}\t'.format(La))
+    f.write('{0:.2f}\t'.format(L))
+    f.write('\n')
     levels.append(La)
     print('{0:.2f}  dBA'.format(La))
     print('{0:.2f}  dBZ'.format(L))
